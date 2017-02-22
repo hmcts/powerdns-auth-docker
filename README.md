@@ -7,7 +7,7 @@
 
 * Small Alpine based Image
 * MySQL (default), Postgres, SQLite and Bind backend included
-* Automatic MySQL database initialization
+* Automatic database initialization for MySQL, Postgres or SQLite
 * Latest PowerDNS version (if not pls file an issue)
 * Guardian process enabled
 * Graceful shutdown using pdns_control
@@ -19,6 +19,8 @@
 * `4`: PowerDNS Version 4.x.x, latest image build
 
 ## Usage
+
+### MySQL
 
 ```shell
 # Start a MySQL Container
@@ -39,6 +41,40 @@ $ docker run --name pdns \
     --allow-axfr-ips=127.0.0.1,123.1.2.3
 ```
 
+### Postgres
+
+```shell
+# Start a Postgres Container
+$ docker run -d \
+  --name pdns-postgres \
+  -e POSTGRES_PASSWORD=supersecret \
+  -v $PWD/postgres-data:/var/lib/postgresql \
+  postgres:9.6
+
+$ docker run --name pdns \
+  --link pdns-postgres:postgres \
+  -p 53:53 \
+  -p 53:53/udp \
+  -e AUTOCONF=postgres \
+  -e PGSQL_USER=postgres \
+  -e PGSQL_PASS=supersecret \
+  psitrax/powerdns \
+    --cache-ttl=120 \
+    --allow-axfr-ips=127.0.0.1,123.1.2.3
+```
+
+### SQLite
+
+```shell
+$ docker run --name pdns \
+  -p 53:53 \
+  -p 53:53/udp \
+  -e AUTOCONF=sqlite \
+  psitrax/powerdns \
+    --cache-ttl=120 \
+    --allow-axfr-ips=127.0.0.1,123.1.2.3
+```
+
 ## Configuration
 
 **Environment Configuration:**
@@ -48,7 +84,15 @@ $ docker run --name pdns \
   * `MYSQL_USER=root`
   * `MYSQL_PASS=root`
   * `MYSQL_DB=pdns`
-* Want to disable mysql initialization? Use `MYSQL_AUTOCONF=false`
+* Postgres connection settings
+  * `PGSQL_HOST=mysql`
+  * `PGSQL_USER=root`
+  * `PGSQL_PASS=root`
+  * `PGSQL_DB=pdns`
+* SQLite connection settings
+  * `SQLITE_DB=/pdns.sqlite3`
+* Want to disable mysql initialization? Use `AUTOCONF=false`
+* Want to apply 12Factor-Pattern? Apply environment variables of the form `PDNS_$pdns-config-variable=$config-value`, like `PDNS_WEBSERVER=yes`
 * Want to use own config files? Mount a Volume to `/etc/pdns/conf.d` or simply overwrite `/etc/pdns/pdns.conf`
 
 **PowerDNS Configuration:**
