@@ -59,7 +59,7 @@ isDBup () {
       echo "SELECT 1" | $PGSQLCMD 1>/dev/null
       echo $?
     ;;
-    gsqlite3)
+    *)
       echo 0
     ;;
   esac
