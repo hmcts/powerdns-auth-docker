@@ -6,10 +6,9 @@ LABEL \
   MAINTAINER="Christoph Wiechert <wio@psitrax.de>" \
   CONTRIBUTORS="Mathias Kaufmann <me@stei.gr>"
 
-ENV REFRESHED_AT="2018-11-09" \
+ENV REFRESHED_AT="2019-01-31" \
     POWERDNS_VERSION=4.1.5 \
     AUTOCONF=mysql \
-    TINI_VERSION=v0.18.0 \
     MYSQL_HOST="mysql" \
     MYSQL_PORT="3306" \
     MYSQL_USER="root" \
@@ -22,9 +21,9 @@ ENV REFRESHED_AT="2018-11-09" \
     PGSQL_DB="pdns" \
     SQLITE_DB="pdns.sqlite3"
 
-RUN apk --update add mysql-client mariadb-client-libs libpq sqlite-libs libstdc++ libgcc postgresql-client sqlite \
-  && apk add --virtual build-deps \
-      g++ make mariadb-dev postgresql-dev sqlite-dev curl boost-dev file binutils  \
+RUN apk --update --no-cache add mysql-client mariadb-client-libs libpq sqlite-libs libstdc++ libgcc postgresql-client sqlite \
+  && apk add --no-cache --virtual .build-deps \
+      g++ make mariadb-dev postgresql-dev sqlite-dev curl boost-dev file binutils bash \
   && curl -sSL https://downloads.powerdns.com/releases/pdns-$POWERDNS_VERSION.tar.bz2 | tar xj -C /tmp \
   && cd /tmp/pdns-$POWERDNS_VERSION \
   && ./configure \
@@ -43,14 +42,14 @@ RUN apk --update add mysql-client mariadb-client-libs libpq sqlite-libs libstdc+
   && addgroup -S pdns 2>/dev/null \
   && adduser -S -D -H -h /var/empty -s /bin/false -G pdns -g pdns pdns 2>/dev/null \
   && cp /usr/lib/libboost_program_options-mt.so* /tmp \
-  && apk del --purge build-deps \
+  && apk del --purge .build-deps \
   && mv /tmp/libboost_program_options-mt.so* /usr/lib/ \
   && rm -rf /tmp/pdns-$POWERDNS_VERSION /var/cache/apk/*
 
 
 EXPOSE 53/tcp 53/udp
 
-ADD mysql.schema.sql pgsql.schema.sql sqlite3.schema.sql pdns.conf /etc/pdns/
+ADD sql/* pdns.conf /etc/pdns/
 
 ADD entrypoint.sh /bin/powerdns
 

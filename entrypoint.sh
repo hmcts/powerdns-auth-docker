@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 [[ -z "$TRACE" ]] || set -x
@@ -9,7 +9,7 @@ set -e
 # treat everything except -- as exec cmd
 [ "${1:0:2}" != "--" ] && exec "$@"
 
-# Set MySQL Credentials to be imported into pdns.conf
+# Set credentials to be imported into pdns.conf
 case "$AUTOCONF" in
   mysql)
     export PDNS_LOAD_MODULES=$PDNS_LOAD_MODULES,libgmysqlbackend.so
@@ -63,7 +63,7 @@ isDBup () {
 }
 
 RETRY=10
-until [ `isDBup` -eq 0 ] || [ $RETRY -le 0 ] ; do
+until [ $(isDBup) -eq 0 ] || [ $RETRY -le 0 ] ; do
   echo "Waiting for database to come up"
   sleep 5
   RETRY=$(expr $RETRY - 1)
@@ -85,7 +85,7 @@ case "$PDNS_LAUNCH" in
     MYSQLCMD="$MYSQLCMD $MYSQL_DB"
     if [ "$(echo "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = \"$MYSQL_DB\";" | $MYSQLCMD)" -le 1 ]; then
       echo Initializing Database
-      cat /etc/pdns/mysql.schema.sql | $MYSQLCMD
+      $MYSQLCMD < /etc/pdns/mysql.schema.sql
     fi
   ;;
   gpgsql)
@@ -95,13 +95,13 @@ case "$PDNS_LAUNCH" in
     PGSQLCMD="$PGSQLCMD $PGSQL_DB"
     if [[ -z "$(printf '\dt' | $PGSQLCMD -qAt)" ]]; then
       echo Initializing Database
-      cat /etc/pdns/pgsql.schema.sql | $PGSQLCMD
+      $PGSQLCMD < /etc/pdns/pgsql.schema.sql
     fi
   ;;
   gsqlite3)
     if [[ ! -f "$PDNS_GSQLITE3_DATABASE" ]]; then
       install -D -d -o pdns -g pdns -m 0755 $(dirname $PDNS_GSQLITE3_DATABASE)
-      cat /etc/pdns/sqlite3.schema.sql | sqlite3 $PDNS_GSQLITE3_DATABASE
+      sqlite3 $PDNS_GSQLITE3_DATABASE < /etc/pdns/sqlite3.schema.sql
       chown pdns:pdns $PDNS_GSQLITE3_DATABASE
     fi
   ;;
