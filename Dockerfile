@@ -1,6 +1,4 @@
-# Stick to libressl 2.6
-# https://github.com/PowerDNS/pdns/issues/6943
-FROM alpine:3.7
+FROM alpine:3.9
 
 LABEL \
   MAINTAINER="Christoph Wiechert <wio@psitrax.de>" \
@@ -21,7 +19,7 @@ ENV REFRESHED_AT="2019-01-31" \
     PGSQL_DB="pdns" \
     SQLITE_DB="pdns.sqlite3"
 
-RUN apk --update --no-cache add mysql-client mariadb-client-libs libpq sqlite-libs libstdc++ libgcc postgresql-client sqlite bash \
+RUN apk --update --no-cache add mysql-client mariadb-connector-c-dev libpq sqlite-libs libstdc++ libgcc postgresql-client sqlite bash \
   && apk add --no-cache --virtual .build-deps \
       g++ make mariadb-dev postgresql-dev sqlite-dev curl boost-dev file binutils \
   && curl -sSL https://downloads.powerdns.com/releases/pdns-$POWERDNS_VERSION.tar.bz2 | tar xj -C /tmp \
@@ -41,9 +39,7 @@ RUN apk --update --no-cache add mysql-client mariadb-client-libs libpq sqlite-li
   && mkdir -p /etc/pdns/conf.d \
   && addgroup -S pdns 2>/dev/null \
   && adduser -S -D -H -h /var/empty -s /bin/false -G pdns -g pdns pdns 2>/dev/null \
-  && cp /usr/lib/libboost_program_options-mt.so* /tmp \
   && apk del --purge .build-deps \
-  && mv /tmp/libboost_program_options-mt.so* /usr/lib/ \
   && rm -rf /tmp/pdns-$POWERDNS_VERSION /var/cache/apk/*
 
 
